@@ -5,6 +5,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public class UploadSummarySpecification {
                 if (field != null && operation != null && value != null) {
                     Path<?> path = root.get(field);
 
-                  switch (operation) {
+                    switch (operation) {
                         case "contains":
                             if (value instanceof String) {
                                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), "%" + value.toString().toLowerCase() + "%"));
@@ -55,10 +56,11 @@ public class UploadSummarySpecification {
                         // Handle additional operations here
                     }
                 }
-                }
             }
+
 
             return predicate;
         };
     }
 }
+
