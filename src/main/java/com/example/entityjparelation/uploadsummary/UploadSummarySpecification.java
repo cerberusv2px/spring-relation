@@ -5,7 +5,6 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -23,23 +22,23 @@ public class UploadSummarySpecification {
                 if (field != null && operation != null && value != null) {
                     Path<?> path = root.get(field);
 
-                    switch (operation) {
-                        case "contains" -> {
+                  switch (operation) {
+                        case "contains":
                             if (value instanceof String) {
                                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), "%" + value.toString().toLowerCase() + "%"));
                             }
-                        }
-                        case "startsWith" -> {
+                            break;
+                        case "startsWith":
                             if (value instanceof String) {
                                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), value.toString().toLowerCase() + "%"));
                             }
-                        }
-                        case "endsWith" -> {
+                            break;
+                        case "endsWith":
                             if (value instanceof String) {
                                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), "%" + value.toString().toLowerCase()));
                             }
-                        }
-                        case "equals" -> {
+                            break;
+                        case "equals":
                             if (value instanceof String) {
                                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(criteriaBuilder.lower(path.as(String.class)), value.toString().toLowerCase()));
                             } else if (value instanceof Number) {
@@ -47,28 +46,15 @@ public class UploadSummarySpecification {
                             } else if (value instanceof Date) {
                                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(path, value));
                             }
-                        }
-                        case "isAnyOf" -> {
+                            break;
+                        case "isAnyOf":
                             if (value instanceof List) {
                                 predicate = criteriaBuilder.and(predicate, path.in((List<?>) value));
                             }
-                        }
-                        case "greaterThan" -> {
-                            if (value instanceof Number) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.gt(path.as(Number.class), (Number) value));
-                            } else if (value instanceof Date) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.greaterThan(path.as(Date.class), (Date) value));
-                            }
-                        }
-                        case "lessThan" -> {
-                            if (value instanceof Number) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.lt(path.as(Number.class), (Number) value));
-                            } else if (value instanceof Date) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.lessThan(path.as(Date.class), (Date) value));
-                            }
-                        }
+                            break;
                         // Handle additional operations here
                     }
+                }
                 }
             }
 
