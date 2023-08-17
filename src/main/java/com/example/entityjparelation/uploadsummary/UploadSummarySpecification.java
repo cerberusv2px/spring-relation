@@ -1,6 +1,8 @@
 package com.example.entityjparelation.uploadsummary;
 
+import com.example.entityjparelation.template.TemplateTypeEntity;
 import com.example.entityjparelation.uploadsummary.models.UploadSummaryEntity;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,7 +23,15 @@ public class UploadSummarySpecification {
                 Object value = filter.get("value");
 
                 if (field != null && operation != null && value != null) {
-                    Path<?> path = root.get(field);
+                    Path<?> path;
+
+                    if ("templateName".equals(field)) {
+                        // Handle associated entity property
+                        Join<UploadSummaryEntity, TemplateTypeEntity> join = root.join("templateTypeEntity");
+                        path = join.get("templateName");
+                    } else {
+                        path = root.get(field);
+                    }
 
                     switch (operation) {
                         case "contains":

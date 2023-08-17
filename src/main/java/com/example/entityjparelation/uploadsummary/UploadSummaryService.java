@@ -24,11 +24,16 @@ public class UploadSummaryService {
         this.uploadSummaryRepository = uploadSummaryRepository;
     }
 
-    public Map<String, Object> getUploadSummary(int pageNo,
-                                                int pageSize,
+    public Map<String, Object> getUploadSummary(Integer pageNo,
+                                                Integer pageSize,
                                                 String sortBy,
                                                 String sortOrder,
                                                 List<Map<String, Object>> filters) {
+
+        pageNo = pageNo == null ? 1 : pageNo;
+        pageSize = pageSize == null ? 10 : pageSize;
+        sortBy = sortBy == null ? "batchId" : sortBy;
+        sortOrder = sortOrder == null ? "asc" : sortOrder;
 
         Sort.Direction direction = Sort.Direction.ASC;
         if ("desc".equalsIgnoreCase(sortOrder)) {
