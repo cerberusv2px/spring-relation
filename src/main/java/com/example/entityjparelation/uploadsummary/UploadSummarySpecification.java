@@ -7,6 +7,8 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -50,13 +52,21 @@ public class UploadSummarySpecification {
                             }
                             break;
                         case "equals":
-                            if (value instanceof String) {
+                            if ("submissionDate".equals(field) && value instanceof String) {
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                                try {
+                                    Date parsedDate = sdf.parse(value.toString());
+                                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(criteriaBuilder.function("date", Date.class, path), parsedDate));
+                                } catch (ParseException e) {
+                                    // Handle parse exception
+                                    e.printStackTrace();
+                                }
+                            } else if (value instanceof String) {
                                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(criteriaBuilder.lower(path.as(String.class)), value.toString().toLowerCase()));
                             } else if (value instanceof Number) {
                                 predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(path, value));
-                            } else if (value instanceof Date) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(path, value));
                             }
+
                             break;
                         case "isAnyOf":
                             if (value instanceof List) {
