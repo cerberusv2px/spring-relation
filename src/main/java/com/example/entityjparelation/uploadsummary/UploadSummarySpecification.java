@@ -2,6 +2,7 @@ package com.example.entityjparelation.uploadsummary;
 
 import com.example.entityjparelation.template.TemplateTypeEntity;
 import com.example.entityjparelation.uploadsummary.models.UploadSummaryEntity;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -9,15 +10,19 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 public class UploadSummarySpecification {
 
-    public static Specification<UploadSummaryEntity> buildSpecification(List<Map<String, Object>> filters) {
+    public static Specification<UploadSummaryEntity> buildSpecification(List<Map<String, Object>> filters, String filterCondition) {
         return (root, query, criteriaBuilder) -> {
-            Predicate predicate = criteriaBuilder.conjunction();
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Predicate finalPredicate = null;
+            // Predicate predicate = criteriaBuilder.conjunction();
 
             for (Map<String, Object> filter : filters) {
                 String field = (String) filter.get("field");
@@ -35,20 +40,22 @@ public class UploadSummarySpecification {
                         path = root.get(field);
                     }
 
+                    Predicate predicate = null;
+
                     switch (operation) {
                         case "contains":
                             if (value instanceof String) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), "%" + value.toString().toLowerCase() + "%"));
+                                predicate = criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), "%" + value.toString().toLowerCase() + "%");
                             }
                             break;
                         case "startsWith":
                             if (value instanceof String) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), value.toString().toLowerCase() + "%"));
+                                predicate = criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), value.toString().toLowerCase() + "%");
                             }
                             break;
                         case "endsWith":
                             if (value instanceof String) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), "%" + value.toString().toLowerCase()));
+                                predicate = criteriaBuilder.like(criteriaBuilder.lower(path.as(String.class)), "%" + value.toString().toLowerCase());
                             }
                             break;
                         case "equals":
@@ -56,31 +63,56 @@ public class UploadSummarySpecification {
                                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                                 try {
                                     Date parsedDate = sdf.parse(value.toString());
-                                    predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(criteriaBuilder.function("date", Date.class, path), parsedDate));
+                                    predicate = criteriaBuilder.equal(criteriaBuilder.function("date", Date.class, path), parsedDate);
                                 } catch (ParseException e) {
                                     // Handle parse exception
                                     e.printStackTrace();
                                 }
                             } else if (value instanceof String) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(criteriaBuilder.lower(path.as(String.class)), value.toString().toLowerCase()));
+                                predicate = criteriaBuilder.equal(criteriaBuilder.lower(path.as(String.class)), value.toString().toLowerCase());
                             } else if (value instanceof Number) {
-                                predicate = criteriaBuilder.and(predicate, criteriaBuilder.equal(path, value));
+                                predicate = criteriaBuilder.equal(path, value);
                             }
-
                             break;
                         case "isAnyOf":
                             if (value instanceof List) {
-                                predicate = criteriaBuilder.and(predicate, path.in((List<?>) value));
+                                predicate = path.in((List<?>) value);
                             }
                             break;
-                        // Handle additional operations here
+                        // Handle other cases...
+                    }
+
+                    if (predicate != null) {
+                        predicates.add(predicate);
                     }
                 }
             }
 
 
-            return predicate;
+            Predicate finalPredicate;
+
+            if ("AND".equalsIgnoreCase(filterCondition)) {
+                finalPredicate = criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            } else if ("OR".equalsIgnoreCase(filterCondition)) {
+                finalPredicate = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+            } else {
+                // Default to AND if filterCondition is not recognized
+                finalPredicate = criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            }
+
+            return finalPredicate;
         };
+    }
+
+    private static Predicate combinePredicates(Predicate predicate1, Predicate predicate2, String filterCondition, CriteriaBuilder criteriaBuilder) {
+        if ("AND".equalsIgnoreCase(filterCondition)) {
+            return criteriaBuilder.and(predicate1, predicate2);
+        } else if ("OR".equalsIgnoreCase(filterCondition)) {
+            return criteriaBuilder.or(predicate1, predicate2);
+        } else {
+            // Default to AND if filterCondition is not recognized
+            return criteriaBuilder.and(predicate1, predicate2);
+        }
     }
 }
 

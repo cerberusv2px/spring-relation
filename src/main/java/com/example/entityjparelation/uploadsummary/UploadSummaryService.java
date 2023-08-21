@@ -28,6 +28,7 @@ public class UploadSummaryService {
                                                 Integer pageSize,
                                                 String sortBy,
                                                 String sortOrder,
+                                                String filterCondition,
                                                 List<Map<String, Object>> filters) {
 
         pageNo = pageNo == null ? 1 : pageNo;
@@ -47,11 +48,13 @@ public class UploadSummaryService {
         Sort sort = Sort.by(new Sort.Order(direction, sortBy));
 
         Pageable pageable = PageRequest.of(pageNo - 1, pageSize, sort);
-        Specification<UploadSummaryEntity> spec = UploadSummarySpecification.buildSpecification(filters);
+        Specification<UploadSummaryEntity> spec = UploadSummarySpecification.buildSpecification(filters, filterCondition);
         Page<UploadSummaryDTO> pageResult = uploadSummaryRepository.findAll(spec, pageable).map(UploadSummaryTransform::entityToDto);
         Map<String, Object> responseMap = new HashMap<>();
         responseMap.put("content", pageResult.getContent());
         responseMap.put("pageable", pageResult.getPageable());
+
+        pageResult.getContent();
 
         return responseMap;
     }
