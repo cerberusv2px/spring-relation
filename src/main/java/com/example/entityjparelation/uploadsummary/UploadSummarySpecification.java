@@ -2,10 +2,7 @@ package com.example.entityjparelation.uploadsummary;
 
 import com.example.entityjparelation.template.TemplateTypeEntity;
 import com.example.entityjparelation.uploadsummary.models.UploadSummaryEntity;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.text.ParseException;
@@ -63,7 +60,8 @@ public class UploadSummarySpecification {
                                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                                 try {
                                     Date parsedDate = sdf.parse(value.toString());
-                                    predicate = criteriaBuilder.equal(criteriaBuilder.function("date", Date.class, path), parsedDate);
+                                    Expression<Date> truncatedDate = criteriaBuilder.function("TRUNC", Date.class, path);
+                                    predicate = criteriaBuilder.equal(truncatedDate, parsedDate);
                                 } catch (ParseException e) {
                                     // Handle parse exception
                                     e.printStackTrace();
@@ -80,6 +78,59 @@ public class UploadSummarySpecification {
                             }
                             break;
                         // Handle other cases...
+                        case "lessThan":
+                            if ("submissionDate".equals(field) && value instanceof String) {
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                                try {
+                                    Date parsedDate = sdf.parse(value.toString());
+
+                                    // Extract the date part from the timestamp
+                                    Expression<Date> dateExpression = criteriaBuilder.function("TRUNC", Date.class, path);
+
+                                    // Compare using less than
+                                    predicate = criteriaBuilder.lessThan(dateExpression, parsedDate);
+                                } catch (ParseException e) {
+                                    // Handle parse exception
+                                    e.printStackTrace();
+                                }
+                            }
+                            break;
+
+                        case "greaterThan":
+                            if ("submissionDate".equals(field) && value instanceof String) {
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                                try {
+                                    Date parsedDate = sdf.parse(value.toString());
+
+                                    // TRUNC function to extract the date part
+                                    Expression<Date> truncatedDate = criteriaBuilder.function("TRUNC", Date.class, path);
+
+                                    predicate = criteriaBuilder.greaterThan(truncatedDate, parsedDate);
+                                } catch (ParseException e) {
+                                    // Handle parse exception
+                                    e.printStackTrace();
+                                }
+                            }
+                            break;
+
+                        case "between":
+                            if ("submissionDate".equals(field) && value instanceof List && ((List<?>) value).size() == 2) {
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                                try {
+                                    List<?> dateRange = (List<?>) value;
+                                    Date startDate = sdf.parse(dateRange.get(0).toString());
+                                    Date endDate = sdf.parse(dateRange.get(1).toString());
+
+                                    // TRUNC function to extract the date part
+                                    Expression<Date> truncatedDate = criteriaBuilder.function("TRUNC", Date.class, path);
+
+                                    predicate = criteriaBuilder.between(truncatedDate, startDate, endDate);
+                                } catch (ParseException e) {
+                                    // Handle parse exception
+                                    e.printStackTrace();
+                                }
+                            }
+                            break;
                     }
 
                     if (predicate != null) {
