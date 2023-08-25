@@ -53,11 +53,15 @@ public class UploadSummaryService {
         Map<String, Object> responseMap = new HashMap<>();
         responseMap.put("content", pageResult.getContent());
         responseMap.put("pageable", pageResult.getPageable());
-
+        responseMap.put("totalRecord", getTotalRecords(filters, filterCondition));
         pageResult.getContent();
 
         return responseMap;
     }
 
+    public Long getTotalRecords(List<Map<String, Object>> filters, String filterCondition) {
+        Specification<UploadSummaryEntity> specification = UploadSummarySpecification.buildSpecification(filters, filterCondition);
+        return uploadSummaryRepository.count(specification);
+    }
 
 }

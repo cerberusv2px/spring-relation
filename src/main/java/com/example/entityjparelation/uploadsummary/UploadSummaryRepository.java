@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UploadSummaryRepository extends JpaRepository<UploadSummaryEntity, Long> , JpaSpecificationExecutor<UploadSummaryEntity> {
-
 }
