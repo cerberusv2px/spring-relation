@@ -51,9 +51,18 @@ public class UploadSummaryService {
         Specification<UploadSummaryEntity> spec = UploadSummarySpecification.buildSpecification(filters, filterCondition);
         Page<UploadSummaryDTO> pageResult = uploadSummaryRepository.findAll(spec, pageable).map(UploadSummaryTransform::entityToDto);
         Map<String, Object> responseMap = new HashMap<>();
+        Long totalRecords = getTotalRecords(filters, filterCondition);
+        long pagesCount = totalRecords < pageSize ? 1 : (long) Math.ceil((double) totalRecords / pageSize);
+        Map<String, Object> pageableMap = new HashMap<>();
+
+        pageableMap.put("totalRecords", totalRecords);
+        pageableMap.put("totalPageCount", pagesCount);
+        pageableMap.put("offset", pageResult.getPageable().getOffset());
+        pageableMap.put("pageSize", pageResult.getPageable().getPageSize());
+        pageableMap.put("pageNumber", pageResult.getPageable().getPageNumber());
+
         responseMap.put("content", pageResult.getContent());
-        responseMap.put("pageable", pageResult.getPageable());
-        responseMap.put("totalRecord", getTotalRecords(filters, filterCondition));
+        responseMap.put("pageable", pageableMap);
         pageResult.getContent();
 
         return responseMap;
